@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=hkceznwlusqxzrhzbcib"
+    },
+    "edgeone-pages-mcp-server": {
+      "args": [
+        "edgeone-pages-mcp-fullstack"
+      ],
+      "command": "npx"
+    }
+  }
+}
+

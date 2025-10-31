@@ -24,6 +24,12 @@
   - 测试支付流程
   - Webhook 配置
 
+- **docs/STRIPE_CLI_INSTALL.md** - Stripe CLI 安装指南
+  - 多种安装方法
+  - 网络问题解决方案
+  - 手动下载安装
+  - npm 安装方式
+
 - **docs/SUBSCRIPTION_ACTIVATION.md** - 订阅激活指南
   - 数据库 RLS 策略修复
   - 手动激活订阅
