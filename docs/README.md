@@ -12,6 +12,10 @@
 - **[DELIVERY_CHECKLIST.md](./DELIVERY_CHECKLIST.md)** - 交付清单
 - **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - 部署清单
 
+### 配置指南
+- **[STRIPE_COMPLETE_GUIDE.md](./STRIPE_COMPLETE_GUIDE.md)** - Stripe 完整配置指南（支付、订阅、Webhook）
+- **[SUPABASE_KEYS_GUIDE.md](./SUPABASE_KEYS_GUIDE.md)** - Supabase 密钥获取指南
+
 ### 方法论文档
 `methodology/` 目录包含业务方法论相关文档:
 - 洞察提炼方法论
@@ -40,6 +44,8 @@
 | 你想要... | 看这个文档 |
 |---------|----------|
 | 快速启动项目 | [QUICK_START.md](./QUICK_START.md) |
+| 配置 Stripe 支付 | [STRIPE_COMPLETE_GUIDE.md](./STRIPE_COMPLETE_GUIDE.md) |
+| 获取 Supabase 密钥 | [SUPABASE_KEYS_GUIDE.md](./SUPABASE_KEYS_GUIDE.md) |
 | 开发新功能 | [../开发指南.md](../开发指南.md) |
 | 了解架构设计 | [../project-structure.md](../project-structure.md) |
 | 部署到生产 | [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) |
