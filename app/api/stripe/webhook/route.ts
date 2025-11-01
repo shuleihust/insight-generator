@@ -4,9 +4,17 @@ import { stripe } from '@/lib/stripe/server'
 import Stripe from 'stripe'
 
 // 使用 Service Role Key 来绕过 RLS
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing Supabase environment variables')
+  throw new Error('Missing Supabase configuration')
+}
+
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  supabaseUrl,
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,
@@ -119,9 +127,66 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription
+        console.log('Subscription created:', subscription.id)
+
+        // 验证时间戳
+        if (!subscription.current_period_start || !subscription.current_period_end) {
+          console.error('Invalid subscription period:', subscription)
+          return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 })
+        }
+
+        // 从订阅元数据中获取用户 ID
+        const userId = subscription.metadata?.user_id
+        if (!userId) {
+          console.error('Missing user_id in subscription metadata')
+          return NextResponse.json({ error: 'Missing user_id' }, { status: 400 })
+        }
+
+        // 确定订阅类型
+        const planType = subscription.metadata?.plan_type || 'monthly'
+
+        // 检查是否已存在订阅记录
+        const { data: existingSubscription } = await supabaseAdmin
+          .from('subscriptions')
+          .select('id')
+          .eq('stripe_subscription_id', subscription.id)
+          .single()
+
+        if (!existingSubscription) {
+          // 创建新订阅记录
+          const { error: insertError } = await supabaseAdmin
+            .from('subscriptions')
+            .insert({
+              user_id: userId,
+              stripe_customer_id: subscription.customer as string,
+              stripe_subscription_id: subscription.id,
+              plan_type: planType,
+              status: subscription.status,
+              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            })
+
+          if (insertError) {
+            console.error('Failed to create subscription:', insertError)
+            return NextResponse.json({ error: 'Database error' }, { status: 500 })
+          }
+        }
+
+        console.log('Subscription created successfully')
+        break
+      }
+
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
         console.log('Subscription updated:', subscription.id)
+
+        // 验证时间戳
+        if (!subscription.current_period_start || !subscription.current_period_end) {
+          console.error('Invalid subscription period:', subscription)
+          return NextResponse.json({ error: 'Invalid subscription data' }, { status: 400 })
+        }
 
         // 更新订阅状态
         const { error: updateError } = await supabaseAdmin
@@ -163,8 +228,19 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      case 'invoice.payment_succeeded':
+      case 'invoice.paid':
+      case 'invoice.created':
+      case 'invoice.finalized':
+      case 'invoice.updated':
+      case 'payment_intent.succeeded':
+      case 'payment_intent.created':
+        // 这些事件通常不需要特殊处理，因为订阅状态会通过 subscription 事件更新
+        console.log(`处理 ${event.type} 事件（无需操作）`)
+        break
+
       default:
-        console.log('Unhandled event type:', event.type)
+        console.log('未处理的事件类型:', event.type)
     }
 
     return NextResponse.json({ received: true })
